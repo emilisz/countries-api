@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import Country from './components/Country';
 import Ordering from './components/Ordering'
@@ -14,32 +14,20 @@ function App() {
 
   const [title, setTitle] = useState<string>('');
   const [regions, setRegions] = useState<string[]>([]);
-  const [selectedArea, setSelectedArea] = useState<string>('9999999999999');
-const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [selectedArea, setSelectedArea] = useState<string>('999999999');
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
 
-  // const [selectedRegion, setSelectedRegion] = useState<String>("");
-
-
-  // const showSmallerCountries = (region:string, area:number) => {
-  //     const filteredNumbers = [...data].filter((number) => {
-  //       return number.area < area && number.region === region;
-  //     });
-  //     // setSelectedCountrySize(area);
-  //     setFilteredData(filteredNumbers);
-
-
-  // }
 
   const filterData = (area: number, region: string) => {
-    
+
     const filteredNumbers = [...data].filter((number) => {
-      if (!region) {
-        setTitle(`* filtered countries with area smaller than ${area}`)
-        return number.area < area;
+      if (!selectedRegion) {
+        setTitle(`* filtered countries with area smaller than ${selectedArea}`)
+        return number.area < selectedArea;
       }
-      setTitle(`* filtered countries in ${region} region, with area smaller than ${area}`);
-      
-      return number.region === region && number.area < area;
+      setTitle(`* filtered countries in ${selectedRegion} region, with area smaller than ${selectedArea}`);
+
+      return number.region === selectedRegion && number.area < selectedArea;
 
     });
 
@@ -60,42 +48,44 @@ const [selectedRegion, setSelectedRegion] = useState<string>('');
   }
 
   const reset = () => {
+    setSelectedArea('999999999');
+    setSelectedRegion('');
     setFilteredData(data);
     setTitle(``);
   }
 
-
+const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
 
   useEffect(() => {
-    setData(dymmyData);
+    if (!SOURCE) {
+      setData(dymmyData);
     setFilteredData(data);
     setRegions([...new Set(data.map(item => item.region))]);
     setLoading(false);
-
-    const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
-
-  //   fetch(SOURCE)
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         throw new Error(
-  //           `This is an HTTP error: The status is ${response.status}`
-  //         );
-  //       }
-  //       return response.json()
-  //     })
-  //     .then((actualData) => {
-  //       setData(actualData);
-  //       setFilteredData(data)
-  //       setError(null);
-  //     })
-  //     .catch((err) => {
-  //       setError(err.message);
-  //       setData([]);
-  //     })
-  //     .finally(() => {
-  //       setRegions([...new Set(data.map(item => item.region))]);
-  //       setLoading(false);
-  //     });
+    } else {
+      fetch(SOURCE)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              `This is an HTTP error: The status is ${response.status}`
+            );
+          }
+          return response.json()
+        })
+        .then((actualData) => {
+          setData(actualData);
+          setFilteredData(data)
+          setError(null);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setData([]);
+        })
+        .finally(() => {
+          setRegions([...new Set(data.map(item => item.region))]);
+          setLoading(false);
+        });
+    }
 
   }, []);
 
@@ -109,17 +99,14 @@ const [selectedRegion, setSelectedRegion] = useState<string>('');
           <div className='filters'>
             <Ordering sortByName={sortByName} />
             <Filters
-            selectedArea={selectedArea}
-            setSelectedArea={setSelectedArea}
-            selectedRegion={selectedRegion}
-            setSelectedRegion={setSelectedRegion}
-              // setSelectedCountrySize={setSelectedCountrySize}
-              // showSmallerCountries={showSmallerCountries}
+              selectedArea={selectedArea}
+              setSelectedArea={setSelectedArea}
+              selectedRegion={selectedRegion}
+              setSelectedRegion={setSelectedRegion}
               regions={regions}
               filterData={filterData}
-              data={data}
-              reset={reset} />
-              <button className='button reset filter' type='button' onClick={() => reset()}>reset</button>
+              data={data} />
+            <button className='button reset filter' type='button' onClick={() => reset()}>reset</button>
           </div>
         )}
         <span className='subtitle'>{title}</span>
