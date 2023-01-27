@@ -89,9 +89,31 @@ button:hover {
   color: gray;
 }
 
+.pagination {
+  padding: 15px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap:wrap;
+  /* grid-template-columns: repeat(auto-fit, minmax(15px, 1fr));
+  justify-items: start; */
+  /* max-width: 1000px; */
+  /* margin: 0 auto; */
+  /* display: grid; */
+  gap: 1rem;
+}
+
+.pagination-item {
+  /* width: 25px; */
+  /* height: 10px; */
+  /* border: 1px solid black; */
+  padding: 4px;
+  /* margin: auto; */
+  text-align: center;
+}
+
 
 @media (min-width: 900px) {
-  .reset {
+  .last-item {
     justify-self: end;
   }
 

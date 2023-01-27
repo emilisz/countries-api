@@ -1,4 +1,4 @@
-const Filters = ({ selectedArea, setSelectedArea, selectedRegion, setSelectedRegion, regions, filterData, data }: {
+interface Filter {
     selectedArea: string;
     setSelectedArea: Function;
     selectedRegion: string;
@@ -6,7 +6,9 @@ const Filters = ({ selectedArea, setSelectedArea, selectedRegion, setSelectedReg
     regions: Array<any>;
     filterData: Function;
     data: Array<any>;
-}) => {
+}
+
+const Filters = ({ selectedArea, setSelectedArea, selectedRegion, setSelectedRegion, regions, filterData, data }: Filter) => {
 
     return (
         <>
@@ -14,7 +16,7 @@ const Filters = ({ selectedArea, setSelectedArea, selectedRegion, setSelectedReg
             <select className='filter' name="country" id="country" value={selectedArea} onChange={(e) => {
                 setSelectedArea(e.target.value);
             }}>
-                <option value='999999999' selected>-- Filter smaller countries than --</option>
+                <option value='999999999' >-- Filter smaller countries than --</option>
                 {data &&
                     data.map((d, index) => (
                         <option key={index} value={d.area}>{d.name} ({d.area})</option>

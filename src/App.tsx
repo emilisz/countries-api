@@ -4,6 +4,7 @@ import Country from './components/Country';
 import Ordering from './components/Ordering'
 import Filters from './components/Filters';
 import { dymmyData } from './data.js';
+import Pagination from './components/Pagination';
 
 
 function App() {
@@ -16,18 +17,26 @@ function App() {
   const [regions, setRegions] = useState<string[]>([]);
   const [selectedArea, setSelectedArea] = useState<string>('999999999');
   const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [defaultOrder, setDefaultOrder] = useState<string>('desc');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage] = useState(10);
+  const indexOfLastPage = currentPage * recordsPerPage;
+  const indexOfFirstPage = indexOfLastPage - recordsPerPage;
+  const currentRecords = filteredData.slice(indexOfFirstPage, indexOfLastPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
 
-  const filterData = (area: number, region: string) => {
+  const filterData = () => {
 
     const filteredNumbers = [...data].filter((number) => {
       if (!selectedRegion) {
         setTitle(`* filtered countries with area smaller than ${selectedArea}`)
         return number.area < selectedArea;
       }
-      setTitle(`* filtered countries in ${selectedRegion} region, with area smaller than ${selectedArea}`);
-
-      return number.region === selectedRegion && number.area < selectedArea;
+        setTitle(`* filtered countries in ${selectedRegion} region, with area smaller than ${selectedArea}`);
+        return number.region === selectedRegion && number.area < selectedArea;
 
     });
 
@@ -40,9 +49,11 @@ function App() {
       if (order === 'desc') {
         const sortedArray = [...filteredData].sort((a, b) => a.name.localeCompare(b.name))
         setFilteredData(sortedArray);
+        setDefaultOrder('desc');
       } else {
         const sortedArray = [...filteredData].sort((a, b) => b.name.localeCompare(a.name))
         setFilteredData(sortedArray);
+        setDefaultOrder('asc');
       }
     }
   }
@@ -54,50 +65,95 @@ function App() {
     setTitle(``);
   }
 
-const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
+  const getRegionsNames = async (c: any[]) => {
+    setRegions([...new Set(c.map(item => item.region))]);
+  }
+
+  const production = false;
+  const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
+
+  // useEffect(() => {
+  //   const fetchApi = async () => {
+  //     if (!production) {
+  //       console.log('dev environment');
+
+  //       setData(dymmyData);
+  //       setFilteredData(data);
+  //       getRegionsNames(filteredData);
+  //       console.log(filteredData);
+
+  //       setLoading(false);
+  //     } else {
+  //       fetch(SOURCE)
+  //         .then((response) => {
+  //           if (!response.ok) {
+  //             throw new Error(
+  //               `This is an HTTP error: The status is ${response.status}`
+  //             );
+  //           }
+  //           return response.json()
+  //         })
+  //         .then((actualData) => {
+  //           console.log('prod environment');
+  //           setData(actualData);
+  //           setFilteredData(data)
+  //           getRegionsNames(filteredData);
+  //           setError(null);
+  //         })
+  //         .catch((err) => {
+  //           setError(err.message);
+  //           setData([]);
+  //         })
+  //         .finally(() => {
+
+  //           setLoading(false);
+  //         });
+  //     }
+  //   }
+
+  //   fetchApi();
+
+  // }, []);
+
+
 
   useEffect(() => {
-    if (!SOURCE) {
+    if (!production) {
       setData(dymmyData);
-    setFilteredData(data);
-    setRegions([...new Set(data.map(item => item.region))]);
-    setLoading(false);
+      setFilteredData(dymmyData);
+      getRegionsNames(dymmyData);
+      setLoading(false);
     } else {
-      fetch(SOURCE)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(
-              `This is an HTTP error: The status is ${response.status}`
-            );
-          }
-          return response.json()
-        })
-        .then((actualData) => {
-          setData(actualData);
-          setFilteredData(data)
-          setError(null);
-        })
+      const fetchData = async () => {
+        const response = await fetch(SOURCE);
+        const json = await response.json();
+        setData(json);
+        setFilteredData(json)
+        getRegionsNames(json);
+        setError(null);
+      }
+
+      fetchData()
         .catch((err) => {
           setError(err.message);
           setData([]);
         })
         .finally(() => {
-          setRegions([...new Set(data.map(item => item.region))]);
           setLoading(false);
         });
     }
 
-  }, []);
+  }, [])
+
+
 
 
   return (
     <div className="App">
-
       <header>
         <h1>Countries api ({filteredData.length})</h1>
-        {(data && filteredData) && (
+        {data && (
           <div className='filters'>
-            <Ordering sortByName={sortByName} />
             <Filters
               selectedArea={selectedArea}
               setSelectedArea={setSelectedArea}
@@ -106,7 +162,8 @@ const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
               regions={regions}
               filterData={filterData}
               data={data} />
-            <button className='button reset filter' type='button' onClick={() => reset()}>reset</button>
+            <button className='button filter' type='button' onClick={() => reset()}>reset</button>
+            <Ordering sortByName={sortByName} defaultOrder={defaultOrder} />
           </div>
         )}
         <span className='subtitle'>{title}</span>
@@ -119,11 +176,13 @@ const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
 
 
       <div className='countries'>
-        {(data && filteredData) &&
-          filteredData.map(({ name, region, area }: { name: string; region: string; area: string }, index) => (
-            <Country name={name} region={region} area={area} key={index} index={index} />
+        {currentRecords &&
+          currentRecords.map(({ name, region, area }: { name: string; region: string; area: string }, index) => (
+            <Country name={name} region={region} area={area} key={index} />
           ))}
       </div>
+
+      <Pagination recordsPerPage={recordsPerPage} totalRecords={filteredData.length} paginate={paginate}></Pagination>
 
     </div>
   );
