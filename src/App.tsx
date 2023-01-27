@@ -9,7 +9,7 @@ import Pagination from './components/Pagination';
 
 function App() {
   const [data, setData] = useState<any[]>([]);
-  const [filteredData, setFilteredData] = useState<any[]>(data);
+  const [filteredData, setFilteredData] = useState<Array<any>>(data);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -27,34 +27,34 @@ function App() {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  const production = true;
+  const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
+
+
 
   const filterData = () => {
-
     const filteredNumbers = [...data].filter((number) => {
       if (!selectedRegion) {
         setTitle(`* filtered countries with area smaller than ${selectedArea}`)
         return number.area < selectedArea;
       }
-        setTitle(`* filtered countries in ${selectedRegion} region, with area smaller than ${selectedArea}`);
-        return number.region === selectedRegion && number.area < selectedArea;
-
+      setTitle(`* filtered countries in ${selectedRegion} region, with area smaller than ${selectedArea}`);
+      return number.region === selectedRegion && number.area < selectedArea;
     });
 
     setFilteredData(filteredNumbers);
-
+    paginate(1);
   }
 
   const sortByName = (order: String) => {
-    if (order) {
-      if (order === 'desc') {
-        const sortedArray = [...filteredData].sort((a, b) => a.name.localeCompare(b.name))
-        setFilteredData(sortedArray);
-        setDefaultOrder('desc');
-      } else {
-        const sortedArray = [...filteredData].sort((a, b) => b.name.localeCompare(a.name))
-        setFilteredData(sortedArray);
-        setDefaultOrder('asc');
-      }
+    if (order === 'asc') {
+      const sortedArray = [...filteredData].sort((a, b) => b.name.localeCompare(a.name))
+      setFilteredData(sortedArray);
+      setDefaultOrder('asc');
+    } else {
+      const sortedArray = [...filteredData].sort((a, b) => a.name.localeCompare(b.name))
+      setFilteredData(sortedArray);
+      setDefaultOrder('desc');
     }
   }
 
@@ -62,59 +62,14 @@ function App() {
     setSelectedArea('999999999');
     setSelectedRegion('');
     setFilteredData(data);
+    paginate(1);
+    setDefaultOrder('desc');
     setTitle(``);
   }
 
   const getRegionsNames = async (c: any[]) => {
     setRegions([...new Set(c.map(item => item.region))]);
   }
-
-  const production = false;
-  const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
-
-  // useEffect(() => {
-  //   const fetchApi = async () => {
-  //     if (!production) {
-  //       console.log('dev environment');
-
-  //       setData(dymmyData);
-  //       setFilteredData(data);
-  //       getRegionsNames(filteredData);
-  //       console.log(filteredData);
-
-  //       setLoading(false);
-  //     } else {
-  //       fetch(SOURCE)
-  //         .then((response) => {
-  //           if (!response.ok) {
-  //             throw new Error(
-  //               `This is an HTTP error: The status is ${response.status}`
-  //             );
-  //           }
-  //           return response.json()
-  //         })
-  //         .then((actualData) => {
-  //           console.log('prod environment');
-  //           setData(actualData);
-  //           setFilteredData(data)
-  //           getRegionsNames(filteredData);
-  //           setError(null);
-  //         })
-  //         .catch((err) => {
-  //           setError(err.message);
-  //           setData([]);
-  //         })
-  //         .finally(() => {
-
-  //           setLoading(false);
-  //         });
-  //     }
-  //   }
-
-  //   fetchApi();
-
-  // }, []);
-
 
 
   useEffect(() => {

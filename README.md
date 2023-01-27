@@ -1,4 +1,8 @@
-#  Create React App
+#   Countries api
+
+Fetching data from remote api address, filtering and ordering
+
+##  Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface Paginate {
   totalRecords: number,
   recordsPerPage: number,
@@ -7,7 +5,6 @@ interface Paginate {
 }
 
 const Pagination = ({ totalRecords, recordsPerPage, paginate }: Paginate) => {
-
 
   let pageNumbers: any = [];
 
@@ -17,11 +14,11 @@ const Pagination = ({ totalRecords, recordsPerPage, paginate }: Paginate) => {
 
   return (
     <div className='pagination'>
-      {pageNumbers.map((number: any) => {
+      {pageNumbers.map((number: number) => {
         return (
-            <a key={number} onClick={() => paginate(number)} href="!#" className="pagination-item">
-              {number}
-            </a>
+          <a key={number} onClick={() => paginate(number)} href="!#" className="pagination-item">
+            {number}
+          </a>
         )
       })}
     </div>

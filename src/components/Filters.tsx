@@ -3,7 +3,7 @@ interface Filter {
     setSelectedArea: Function;
     selectedRegion: string;
     setSelectedRegion: Function;
-    regions: Array<any>;
+    regions: Array<string>;
     filterData: Function;
     data: Array<any>;
 }
