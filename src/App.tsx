@@ -27,7 +27,7 @@ function App() {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  const production = true;
+  const production = false;
   const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
 
 
