@@ -1,20 +1,18 @@
 interface Filter {
     selectedArea: string;
-    setSelectedArea: Function;
     selectedRegion: string;
-    setSelectedRegion: Function;
     regions: Array<string>;
     filterData: Function;
     data: Array<any>;
+    changeFilter: Function
 }
 
-const Filters = ({ selectedArea, setSelectedArea, selectedRegion, setSelectedRegion, regions, filterData, data }: Filter) => {
-
+const Filters = ({ selectedArea, selectedRegion, regions, filterData, data, changeFilter }: Filter) => {
     return (
         <>
 
             <select className='filter' name="country" id="country" value={selectedArea} onChange={(e) => {
-                setSelectedArea(e.target.value);
+                changeFilter('area', e.target.value);
             }}>
                 <option value='999999999' >-- Filter smaller countries than --</option>
                 {data &&
@@ -25,7 +23,7 @@ const Filters = ({ selectedArea, setSelectedArea, selectedRegion, setSelectedReg
 
 
             <select className='filter' name="region" id="region" value={selectedRegion} onChange={(e) => {
-                setSelectedRegion(e.target.value)
+                changeFilter('region', e.target.value)
             }}>
                 <option value="">-- Filter region --</option>
                 {regions &&

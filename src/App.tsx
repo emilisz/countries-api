@@ -1,97 +1,122 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useReducer } from 'react';
 import './App.css';
 import Country from './components/Country';
 import Ordering from './components/Ordering'
 import Filters from './components/Filters';
 import { dymmyData } from './data.js';
 import Pagination from './components/Pagination';
+import { reducer } from './reducer';
+
+
+const production = false;
+const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
+
+const defaultState = {
+  data: [],
+  filteredData: [],
+  regions: [],
+  selectedArea: '999999999',
+  selectedRegion: '',
+  defaultOrder: 'desc'
+}
 
 
 function App() {
-  const [data, setData] = useState<any[]>([]);
-  const [filteredData, setFilteredData] = useState<Array<any>>(data);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [title, setTitle] = useState<string>('');
-  const [regions, setRegions] = useState<string[]>([]);
-  const [selectedArea, setSelectedArea] = useState<string>('999999999');
-  const [selectedRegion, setSelectedRegion] = useState<string>('');
-  const [defaultOrder, setDefaultOrder] = useState<string>('desc');
+
+  const [state, dispatch] = useReducer(reducer, defaultState);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage] = useState(10);
   const indexOfLastPage = currentPage * recordsPerPage;
   const indexOfFirstPage = indexOfLastPage - recordsPerPage;
-  const currentRecords = filteredData.slice(indexOfFirstPage, indexOfLastPage);
+  const currentRecords = state.filteredData.slice(indexOfFirstPage, indexOfLastPage);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  const production = false;
-  const SOURCE = "https://restcountries.com/v2/all?fields=name,region,area";
 
 
+  const changeFilter = (type: string, value: string) => {
+    if (type === 'area') {
+      dispatch({ type: 'CHANGE AREA', payload: value });
+    } else {
+      dispatch({ type: 'CHANGE REGION', payload: value });
+    }
+
+  }
 
   const filterData = () => {
-    const filteredNumbers = [...data].filter((number) => {
-      if (!selectedRegion) {
-        setTitle(`* filtered countries with area smaller than ${selectedArea}`)
-        return number.area < selectedArea;
+    const filteredNumbers = [...state.data].filter((number) => {
+      if (!state.selectedRegion) {
+        setTitle(`* filtered countries with area smaller than ${state.selectedArea}`)
+        return number.area < state.selectedArea;
       }
-      setTitle(`* filtered countries in ${selectedRegion} region, with area smaller than ${selectedArea}`);
-      return number.region === selectedRegion && number.area < selectedArea;
+      setTitle(`* filtered countries in ${state.selectedRegion} region, with area smaller than ${state.selectedArea}`);
+      return number.region === state.selectedRegion && number.area < state.selectedArea;
     });
 
-    setFilteredData(filteredNumbers);
+    dispatch({ type: 'SET FILTERED DATA', payload: { sortedArray: filteredNumbers, order: 'desc' } });
     paginate(1);
   }
 
   const sortByName = (order: String) => {
     if (order === 'asc') {
-      const sortedArray = [...filteredData].sort((a, b) => b.name.localeCompare(a.name))
-      setFilteredData(sortedArray);
-      setDefaultOrder('asc');
+      const sortedArray = [...state.filteredData].sort((a, b) => b.name.localeCompare(a.name))
+      dispatch({ type: 'SET FILTERED DATA', payload: { sortedArray: sortedArray, order: 'asc' } });
     } else {
-      const sortedArray = [...filteredData].sort((a, b) => a.name.localeCompare(b.name))
-      setFilteredData(sortedArray);
-      setDefaultOrder('desc');
+      const sortedArray = [...state.filteredData].sort((a, b) => a.name.localeCompare(b.name))
+      dispatch({ type: 'SET FILTERED DATA', payload: { sortedArray: sortedArray, order: 'desc' } });
     }
   }
 
   const reset = () => {
-    setSelectedArea('999999999');
-    setSelectedRegion('');
-    setFilteredData(data);
+    dispatch({
+      type: 'RESET', payload: {
+        selectedArea: '999999999',
+        selectedRegion: '',
+        filteredData: state.data,
+        defaultOrder: 'desc'
+      }
+    });
+
     paginate(1);
-    setDefaultOrder('desc');
-    setTitle(``);
+    setTitle('');
   }
 
   const getRegionsNames = async (c: any[]) => {
-    setRegions([...new Set(c.map(item => item.region))]);
+    dispatch({ type: 'SET REGIONS NAMES', payload: [...new Set(c.map(item => item.region))] });
   }
 
 
   useEffect(() => {
     if (!production) {
-      setData(dymmyData);
-      setFilteredData(dymmyData);
+      dispatch({
+        type: 'INITIAL DATA SET', payload: {
+          cData: dymmyData,
+        }
+      })
       getRegionsNames(dymmyData);
+      setError(null);
       setLoading(false);
+
     } else {
       const fetchData = async () => {
         const response = await fetch(SOURCE);
         const json = await response.json();
-        setData(json);
-        setFilteredData(json)
+        dispatch({
+          type: 'INITIAL DATA SET', payload: {
+            cData: json,
+          }
+        })
         getRegionsNames(json);
         setError(null);
-      }
+      };
 
       fetchData()
         .catch((err) => {
           setError(err.message);
-          setData([]);
         })
         .finally(() => {
           setLoading(false);
@@ -106,38 +131,37 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>Countries api ({filteredData.length})</h1>
-        {data && (
+        <h1>Countries api ({state.filteredData.length})</h1>
+        {state.data && (
           <div className='filters'>
             <Filters
-              selectedArea={selectedArea}
-              setSelectedArea={setSelectedArea}
-              selectedRegion={selectedRegion}
-              setSelectedRegion={setSelectedRegion}
-              regions={regions}
+              changeFilter={changeFilter}
+              selectedArea={state.selectedArea}
+              selectedRegion={state.selectedRegion}
+              regions={state.regions}
               filterData={filterData}
-              data={data} />
+              data={state.data} />
             <button className='button filter' type='button' onClick={() => reset()}>reset</button>
-            <Ordering sortByName={sortByName} defaultOrder={defaultOrder} />
+            <Ordering sortByName={sortByName} defaultOrder={state.defaultOrder} />
           </div>
         )}
         <span className='subtitle'>{title}</span>
       </header>
 
       {loading && <div>Data loading...</div>}
-      {error && (
-        <div>{`There is a problem fetching the api data - ${error}`}</div>
-      )}
-
+      {error && <div>{`There is a problem fetching the api data - ${error}`}</div>}
 
       <div className='countries'>
         {currentRecords &&
-          currentRecords.map(({ name, region, area }: { name: string; region: string; area: string }, index) => (
+          currentRecords.length > 0 ?
+          currentRecords.map(({ name, region, area }: { name: string; region: string; area: string }, index: number) => (
             <Country name={name} region={region} area={area} key={index} />
-          ))}
+          ))
+          : <p style={{ textAlign: 'center' }}>No countries found ...</p>
+        }
       </div>
 
-      <Pagination recordsPerPage={recordsPerPage} totalRecords={filteredData.length} paginate={paginate}></Pagination>
+      <Pagination recordsPerPage={recordsPerPage} totalRecords={state.filteredData.length} paginate={paginate}></Pagination>
 
     </div>
   );
