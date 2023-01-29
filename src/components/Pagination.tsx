@@ -16,9 +16,9 @@ const Pagination = ({ totalRecords, recordsPerPage, paginate }: Paginate) => {
     <div className='pagination'>
       {pageNumbers.map((number: number) => {
         return (
-          <a key={number} onClick={() => paginate(number)} href="!#" className="pagination-item">
+          <button key={number} onClick={() => paginate(number)} className="pagination-item">
             {number}
-          </a>
+          </button>
         )
       })}
     </div>
